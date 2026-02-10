@@ -19,6 +19,7 @@ use solana_sdk::{
     pubkey::Pubkey,
     signer::Signer,
 };
+use tracing::error;
 
 /// Instruction builder for PumpSwap protocol
 pub struct PumpSwapInstructionBuilder;
@@ -62,6 +63,7 @@ impl InstructionBuilder for PumpSwapInstructionBuilder {
             || (quote_mint == crate::constants::USDC_TOKEN_ACCOUNT
                 && base_mint != crate::constants::WSOL_TOKEN_ACCOUNT);
         if !is_wsol && !is_usdc {
+            error!("Pool: {} Base mint: {} Quote mint: {}", pool, base_mint, quote_mint);
             return Err(anyhow!("Pool must contain WSOL or USDC"));
         }
 
