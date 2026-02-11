@@ -2,6 +2,7 @@ use std::{sync::Arc, time::Instant};
 
 use solana_client::rpc_config::RpcSendTransactionConfig;
 use solana_commitment_config::CommitmentLevel;
+use solana_sdk::message::VersionedMessage;
 use solana_sdk::transaction::VersionedTransaction;
 use solana_transaction_status::UiTransactionEncoding;
 use tracing::{error, info};
@@ -16,6 +17,35 @@ use anyhow::Result;
 #[derive(Clone)]
 pub struct SolRpcClient {
     pub rpc_client: Arc<SolanaRpcClient>,
+}
+
+fn print_versioned_transaction_instructions(tx: &VersionedTransaction) {
+    match &tx.message {
+        VersionedMessage::V0(message) => {
+            log::error!("Transaction Version: V0");
+            for (i, instruction) in message.instructions.iter().enumerate() {
+                // Get the program_id from the account keys using the program_id_index
+                let program_id = &message.account_keys[instruction.program_id_index as usize];
+                
+                log::error!("Instruction {}:", i);
+                log::error!("  Program ID: {}", program_id);
+                log::error!("  Account Indices: {:?}", instruction.accounts);
+                log::error!("  Data (bytes): {:?}", instruction.data); 
+            }
+        },
+        VersionedMessage::Legacy(message) => {
+            log::error!("Transaction Version: Legacy");
+            for (i, instruction) in message.instructions.iter().enumerate() {
+                // In legacy messages, the program_id is directly available
+                let program_id = &message.account_keys[instruction.program_id_index as usize];
+
+                log::error!("Instruction {}:", i);
+                log::error!("  Program ID: {}", program_id);
+                log::error!("  Account Indices: {:?}", instruction.accounts);
+                log::error!("  Data (bytes): {:?}", instruction.data);
+            }
+        },
+    }
 }
 
 #[async_trait::async_trait]
@@ -44,8 +74,10 @@ impl SwqosClientTrait for SolRpcClient {
         match poll_transaction_confirmation(&self.rpc_client, signature, wait_confirmation).await {
             Ok(_) => (),
             Err(e) => {
-                log::info!(" signature: {:?}", signature);
-                log::info!(" [rpc] {} confirmation failed: {:?}", trade_type, start_time.elapsed());
+                log::error!(" signature: {:?}", signature);
+                log::error!(" [rpc] {} confirmation failed: {:?}", trade_type, start_time.elapsed());
+                // log::error!("{}", transaction);
+                print_versioned_transaction_instructions(transaction);
                 log::error!("RPC transaction error: {}", e);
                 return Err(e);
             }
