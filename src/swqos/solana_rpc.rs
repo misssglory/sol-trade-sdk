@@ -4,6 +4,7 @@ use solana_client::rpc_config::RpcSendTransactionConfig;
 use solana_commitment_config::CommitmentLevel;
 use solana_sdk::transaction::VersionedTransaction;
 use solana_transaction_status::UiTransactionEncoding;
+use tracing::{error, info};
 
 use crate::swqos::SwqosClientTrait;
 use crate::{
@@ -43,14 +44,15 @@ impl SwqosClientTrait for SolRpcClient {
         match poll_transaction_confirmation(&self.rpc_client, signature, wait_confirmation).await {
             Ok(_) => (),
             Err(e) => {
-                println!(" signature: {:?}", signature);
-                println!(" [rpc] {} confirmation failed: {:?}", trade_type, start_time.elapsed());
+                log::info!(" signature: {:?}", signature);
+                log::info!(" [rpc] {} confirmation failed: {:?}", trade_type, start_time.elapsed());
+                log::error!("RPC transaction error: {}", e);
                 return Err(e);
             }
         }
         if wait_confirmation {
-            println!(" signature: {:?}", signature);
-            println!(" [rpc] {} confirmed: {:?}", trade_type, start_time.elapsed());
+            log::info!(" signature: {:?}", signature);
+            log::info!(" [rpc] {} confirmed: {:?}", trade_type, start_time.elapsed());
         }
 
         Ok(())
