@@ -225,7 +225,7 @@ pub fn get_associated_token_address_with_program_id_fast(
         wallet_address,
         token_mint_address,
         token_program_id,
-        false,
+        true,
     )
 }
 
