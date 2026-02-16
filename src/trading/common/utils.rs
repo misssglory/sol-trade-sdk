@@ -31,19 +31,42 @@ pub async fn get_multi_token_balances(
 }
 
 #[inline]
+pub async fn get_token_balance_with_progmram_id(
+    rpc: &SolanaRpcClient,
+    payer: &Pubkey,
+    mint: &Pubkey,
+    program_id: &Pubkey,
+) -> Result<u64, anyhow::Error> {
+    let ata = crate::common::fast_fn::get_associated_token_address_with_program_id_fast(
+        payer, mint, program_id,
+    );
+    let balance = rpc.get_token_account_balance(&ata).await?;
+    let balance_u64 =
+        balance.amount.parse::<u64>().map_err(|_| anyhow!("Failed to parse token balance"))?;
+    Ok(balance_u64)
+}
+
+#[inline]
 pub async fn get_token_balance(
     rpc: &SolanaRpcClient,
     payer: &Pubkey,
     mint: &Pubkey,
 ) -> Result<u64, anyhow::Error> {
-    let ata = crate::common::fast_fn::get_associated_token_address_with_program_id_fast(
-        payer,
-        mint,
-        &crate::constants::TOKEN_PROGRAM,
-    );
-    let balance = rpc.get_token_account_balance(&ata).await?;
     let balance_u64 =
-        balance.amount.parse::<u64>().map_err(|_| anyhow!("Failed to parse token balance"))?;
+        get_token_balance_with_progmram_id(rpc, payer, mint, &crate::constants::TOKEN_PROGRAM)
+            .await?;
+    Ok(balance_u64)
+}
+
+#[inline]
+pub async fn get_token_2022_balance(
+    rpc: &SolanaRpcClient,
+    payer: &Pubkey,
+    mint: &Pubkey,
+) -> Result<u64, anyhow::Error> {
+    let balance_u64 =
+        get_token_balance_with_progmram_id(rpc, payer, mint, &crate::constants::TOKEN_PROGRAM_2022)
+            .await?;
     Ok(balance_u64)
 }
 

@@ -30,6 +30,11 @@ impl TradingClient {
     pub async fn get_payer_token_balance(&self, mint: &Pubkey) -> Result<u64, anyhow::Error> {
         trading::common::utils::get_token_balance(&self.infrastructure.rpc, &self.payer.pubkey(), mint).await
     }
+    
+    #[inline]
+    pub async fn get_payer_token_2022_balance(&self, mint: &Pubkey) -> Result<u64, anyhow::Error> {
+        trading::common::utils::get_token_2022_balance(&self.infrastructure.rpc, &self.payer.pubkey(), mint).await
+    }
 
     #[inline]
     pub fn get_payer_pubkey(&self) -> Pubkey {
